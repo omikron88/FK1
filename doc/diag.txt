@@ -1,0 +1,177 @@
+
+	DIAG      program na diagnostiku mikropocitace FK-1
+
+
+ Navod k pouziti: Pokud budeme program ladit pod CP/M, pak nasledujici instrukce
+ bude OBJECT EQU CPM, provadime-li preklad pro umisteni do EPROM, bude nasledujici
+ instukce OBJECT EQU EPROM.
+
+ Program na diagnostiku mikropocitace FK-1 urceny k zapisu do EPROM. Pomoci tohoto
+ testu lze jednoduse ozivovat mikropocitac a uspesne opravovat, pokud zavada znemozni
+ nasati CP/M. Nejprve je treba zkontrolovat, jestli je na D13 noha 3 a 11 jednicka.
+ Neni-li, nutno opravit zavadu. Pokud je to v poradku, neni mit treba obavy o diskety,
+ cely test je neznici. Tento program je genialni v tom, ze prozkusuje pocitac po
+ kouskach. Vrele nedoporucuji bezhlave spousteni sequenci, ale jen po tom, kdyz vse
+ spolehlive chodi, neb dalsi sequence mohou vyuzivat jiz otestovanou elektroniku.
+ Jako pomucky staci televize, tristavova sonda, kousek dratu na propojky a uzemnovani,
+ nebetycna trpelivost, trocha stesti a vidina tucne odmeny. Mnoho uspechu preje autor
+ testu, ktery si sam vyzkousel hledani zavad.
+
+ 1. verse, dne 13. 8. 1989.
+
+
+ Test jestli vubec neco jede. Stridave se objevuji a mizi pulsy IORQ, pozorujeme sondou
+ na D66/20. Pulsy se objevi 2x.
+
+ Podprogram na chvilkove provedeni IN nebo pockani. Y := spojka, X := ad. odskoku.
+ Nici: A, B, D, E.
+ Podprogram na cekani.  D := doba cekani, Y := spojka
+ Nici: B, D, E, X.
+
+ Test videoram. Zapisuji se hodnoty 55, FE, AA, 01 neustale do videoram, a cyklicky se
+ opakuji. Po prvnim pruchodu ma pamet obsah 55 FE AA 01 55 FE ...., pri druhem  FE AA
+ 01 55 FE ... a tak dale. Je to tak zvany "sachovnicovy test" ktery je nejucinnejsi pro
+ kontroly jakychkoliv druhu pameti. Chyby jsou znazorneny pomoci nudli, ktere se objevi
+ na CRT. Plna nudle je jedna, prazdna je nula. Prva osmice je co se z pameti precetlo,
+ druha co se melo precist. Pod tim je dvoubytova adresa. Po chybe se test automaticky
+ opakuje, az kdyz je zavada odstranena, pokracuje se dal.
+
+
+ Test pameti. (IY) := vyssi bajt ad. zacatku pameti, (IY+1) := vyssi bajt ad. konce,
+ (IY+2) := spojka, (IY+4) := ad. odskoku pred zapisem/ctenim  (zpet pres IX ci TMEM2).
+ Po provedeni: Z=1 --> test prosel OK, Z=0 --> test prosel blbe. Pokud je Z=0,
+ pak: A:=chybne precteny bajt, DE:= jeho adresa, X:= adresa spravneho bajtu.
+ Nici: A, C, DE, HL, X.
+
+
+ Zobrazeni chyby v pameti. Zadni DE:=ad vadneho mista, A:=vadny bajt, X:=ad.ok bajtu,
+ predni HL:=spojka.
+ Nici: A, zadni AF, zadni BC, zadni HL, Y.
+
+
+ Podprogram na zobrazeni jednoho bajtu nudlema. Y:=spojka, A:=zobrazovany bajt,
+ HL:=ad. CRT. Nesmi se smazat X a DE.
+ Nici: B, C, HL, zadni AF.
+
+
+ Test horni pulky RAM. Testuje se shodnou sachovnici jako videoram. Chyby jsou take
+ zobrazeny stejnymi nudlemi. Prubeh testu je signalizovan v horni casti obrazovky
+ ctverecky. Prazdny znamena ze se rozebehl cykl zapisu do pameti, jeho vymalovani
+ ukazuje, ze se z pameti kontrolne cte. Pocet ctverecku urcuje pocet rund. Po chybe
+ se test automaticky opakuje.
+
+	
+
+ Test pameti od adresy 0 do 7FFF ktera je v zakrytu s EPROM a videoRAM. Testovani je
+ shodne jako u dolni pulky RAM. Ctverecky signalizujici zdarny prubeh testu se kresli
+ do dolni pulky obrazovky. Po chybe se automaticky opakuje test horni pulky RAM.
+
+
+ Test osvezovaciho (refresh) cyklu dynamicke pameti RAM. Testuje se pouze videoRAM
+ a horni pulka pameti, coz musi stacit (pro blbce: test musi nekde byt ulozen).
+ Pamet se popise sachovnici a ceka se asi 10 sekund. Pak se zkontroluje, jestli
+ obsah nevyhnil. Chyby se zobrazuji nudlema, a po ni se opakuje od testu horni casti.
+
+
+ Test rolovani obrazu. Na televizi se objevi obrazec, ktery roluje chvili nahoru,
+ chvili dolu. Spravnou funkci pozorujeme na obrazovce. Pokud se nam to nelibi,
+ lze sledovat (i sondou) vyvoj citace na D34 nohy 18-25, nebo na vystupech D85 a D86.
+ Tento test je veledulezity, i kdyz vypada jako hracicka. Testuje totiz hlavni data
+ bus, jestli tam proudi vsechny bity (pocitame do 255 tak musi). Pokud obraz viditelne
+ poskakuje a plynule nejede, je neco blbe. Durazne varuji pred dalsim spoustenim
+ jinych testu, neb pri chybe v data busu se spatne naprogramuji 8255 a nechodi
+ nic, nebo se to i zakousne a nic se nehne.
+
+
+ Aktivizace minisupervisoru ktery zpracovava klavesnici a ridi dalsi spousteni sekvenci
+ testu.
+
+ Mini supervisor ktery ridi dalsi sequence testu. Stiskem CR nebo ROLL se prechazi na
+ dalsi sequenci, stiskem BS na predchozi. Cokoliv jineho opakuje prave bezici sequenci.
+ ROLL a BS jsou zvoleny proto, ze maji jen jeden bit a lze je simulovat uzemnovanim
+ noh 3 a 6 konektoru klavesnice bez jeji pouziti.
+
+
+ Podprogram na vypis jedne cislice na CRT. A := bin. cislice (0-9), DE := ad. CRT,
+ Nici: A, BC, HL. Po ukonceni je v DE ad. dalsi posice v CRT.
+
+ Podprogram na vypis textu na CRT. DE := ad. v CRT, HL := ad. vzorku znaku.
+ Nici: A, BC, DE, HL. Po provedeni je DE=ad. dalsiho mista v CRT, HL=ad. dalsiho vzorku.
+
+
+ Podprogram na zjisteni co se zmacklo na klavesnici. Pokud je to CR, BS nebo ROLL,
+ tak skoci do supervisoru na zpracovani, jinak se vrati.
+ Nici: A, HL, X.
+
+SQ00
+ Test neocekavaneho IP. Nudlema se zobrazi, od kud prichazi IP. Po jeho propuknuti
+ se zinvertuje text SQ 00 a zobrazi nudli odkud vzniklo. V klidu nema zadne IP vzniknout,
+ zadne nudle se neukazuji. Jestli to chodi, muzeme vyzkouset uzemnovanim noh D54 nebo
+ stiskem nejake klavesy ci kdyz vezmeme do ruky mys.
+
+SQO1
+ Test klavesnice. Stiskem klavesy se zobrazi jeji hodnota nudlema. Lze testovat i
+ uzemnovanim spicek konektoru bez klavesnice.
+
+
+ na konektoru tiskarny sondou. Po stisku cehokoliv se pokracuje dalsim bitem.
+
+SQ02
+ Test preruseni systemovych hodin 50 Hz. Nudlema se zobrazuje citac sekund, tam se
+ zapocita kazdy 50. impuls.
+
+SQ04
+ Test mysi. Nudlema se zobrazuje hodnota, ktera se precte z mysi. Dale musi vzniknout
+ ÉP kdykoliv na mys sahneme, coz pozname inverzi textu SQ 04 na obrazovce. Lze testovat
+ tez pouhym uzemnovanim noh konektoru mysi.
+
+
+ Podprogram na inversi textu SQ XY. Nechce nic, neznici nic. Chytrej podprogram.
+
+SQ05
+ Test programovych citacu 8253 D35. Na vystupu citace 0 je 1 Hz, na vystupu citace 1
+ je 15 Hz, citac 3 se netestuje.  Pokud jsou pochybnosti o jeho funkci, zkontrolujeme
+ ho v SQ 08 kde je v cinnosti. Kontrolujeme sondou nebo oscilem na jejich vystupech.
+
+SQ06
+ Test obvodu D27 LS174 pro povoleni diskovych operaci. Po stisku cehokoliv se meni bit
+ do tohoto pousteny. Kontrolujeme sondou vsude kam se privadi. Nudlema se ukazuje co
+ tam leze.
+
+SQ07
+ Test obvodu 8251 D41 usart. Pozorujeme na jeho vystupu jestli tam neco je. Vysila se
+ zamnerne co nejpomaleji jen lze, aby to bylo videt.
+
+SQ08
+ Test obvodu souvisejicich se zapisem na disk. Kontrolu provadime sondou nebo
+ oscilem na D13 noha 3 - pulsy, noha 11 - zapisovana data. Dal musi byt pulsy
+ na D54 kde musi proudit IP na nohu 22. Pokud tomu tak neni, je vhodne postupovat
+ podle listingu programu a opakovaneho spousteni SQ 08 od zacatku. I kdyz se testuje
+ zapis na disk, neni treba mit obavy o diskety, pokud jsou odklopeny hlavicky (a mely
+ by byt) coz zkontrolujeme je-li na D44 noha 4 nula.
+
+SQ09
+ Test pohybu po diskete a jejiho statusu. Nejprve se provede RESTORE (t.j. nastaveni
+ stopy 00), pokud se to nezdari, zobrazi se nudlema FF. Kdyz je na diskete zakaz
+ zapisu, je zobrazeno nudlema FE a trvale a sequnce stoji, dokud neni zakaz zapisu
+ odstranen. Pak blika v rytmu prijeti index-markru text SQ 09. Na to se krokuje do
+ stopy 75 a nudlema se ukazuje kde je hlavicka. Vzdy po peti stopach se priklopi a po
+ dalsich peti odklopi hlavicka. Nakonec se udela RESTORE a cela sranda se opakuje pro
+ mechaniku B. Je to s podivem, ale obsah disku neni znicen. Ostatne disky ani nemusi
+ byt pripojeny, staci sondou sledovat signaly na D34 a uzemnovanim nasimulovat drahu
+ 00 a prijeti index-markeru.
+
+SQ10
+ Test kompletniho diskoveho radice.Protoze ale temer vse je jiz otestovano,
+ jde vlastne o test cteciho obvodu.Pri odklopenych hlavickach(aby se nic
+ nestalo),
+ se formatuje a cte zaroven, cimz data prosakuji na vstup a lze je sledovat.
+ Teoreticky by to slo i bez mechanik, kdyby se propojil vystup se vstupem a signal T43
+ se propojil s index-markrem (generuji zde pulsy). Ale je to tam s otevrenym kolektorem,
+ tak nevim, musi se asi udelat nejaky forrichtung. Tim je cely pocitac otestovan.
+ Zdar, zdar, zdar, nazdaaaaaaaaaaaaaaaar.
+
+
+
+ Protoze zbylo kousicek mista v EPROM, tak srandicka na konec.
+
