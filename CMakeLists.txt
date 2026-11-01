@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(FK1Emulator VERSION 0.1.0 LANGUAGES C CXX)
+project(FK1Emulator VERSION 0.1.2 LANGUAGES C CXX)
 
 option(FK1_BUILD_FRONTEND "Build the SDL3 desktop frontend" ON)
 option(FK1_BUILD_TESTS "Build FK-1 core tests" ON)
