@@ -1,33 +1,50 @@
-Klávesnice je běžná Ascii klávesnice s několika speciálními kódy.
-Při stisku pošle Ascii kód tlačítka, při uvolnění neposílá nic.
-Při držení klávesy déle než asi 0.5s opakuje rychlostí asi 4 znaky za sekundu.
-Při stisku klávesy spolu s Ctrl vrací kódy 0-31, tak jako to dělaly první terminály:
-Ctrl+@ = 0x00
-Ctrl+A = 0x01
-Ctrl+B = 0x02
-Ctrl+C = 0x03
-a tak dál
+Klávesnice frontendu odpovídá tabulkám převodníku KEYB_FIN.ASM pro AT89C2051.
+Používá fyzické pozice PC AT kláves (US QWERTY), nikoli rozložení hostitele.
+Po spuštění je aktivní US; levý nebo pravý Alt přepíná US/CZ.
+Aktuální režim trvale ukazuje stavový pruh jako KBD: US nebo KBD: CZ.
+POZOR: samotné přepnutí ALT_LED je v dodaném ASM zakomentované. Emulátor je
+povoluje, aby byly dostupné i české tabulky. Nejde o doslovnou emulaci MCU.
 
-Esc = 0x1B
-Backspace = 0x7F
-Tab = 9
-Enter = 0x0D
+Shift XOR Caps Lock vybírá celou tabulku, tedy i číslice a interpunkci.
+Ctrl převádí znaky po odmaskování bitu 7: hodnoty pod '?' potlačí,
+'?' zachová a vyšší hodnoty maskuje 1Fh. Ctrl+Shift+2 v US tak posílá NUL.
 
-speciální kódy:
+Esc = 1Bh, Backspace = 08h, Tab = 09h, Enter = 0Dh.
+F1/F2/F3 = D0h/D1h/D2h.
+F5 = ROL 80h (Shift 81h), F6 = COPY 82h (Shift 83h),
+F7 = BREAK 84h (Shift 85h). V českých tabulkách F5-F7 nic neposílají.
+F4 pozastaví/obnoví emulátor; F12 zachytí/uvolní myš.
 
-ROL   (mapováno na Del) 0x80, se Shift 0x81
-COPY  (mapováno na Ins) 0x82, se Shift 0x83 
-BREAK (mapováno na End) 0x84, se Shift 0x85
+Samostatný navigační blok (při zapnutém Num Lock je podle ASM potlačen):
+             bez Shift    se Shift
+End          11h          0Fh
+Home         1Eh          15h
+Insert       16h          nic
+Delete       7Fh          7Fh
+Page Down    03h          nic
+Page Up      12h          nic
+nahoru       C1h          C1h
+dolů         C2h          C2h
+vpravo       C3h          C3h
+vlevo        C4h          C4h
+Numerický blok posílá číslice a operátory bez ohledu na Num Lock.
 
-Směrová tlačítka:
+Čeština používá přímo bajty tabulek ASM, nikoli obecný Unicode/KOI8-R kodek.
+Zůstává QWERTY. Horní řada bez Shift: + ě š č ř ž ý á í é.
+Klávesa na US pozici '=' je mrtvá čárka, Shift+'=' mrtvý háček.
+Další znak spotřebuje příslušnou diakritiku; při převodu má přednost před Ctrl.
+Například Alt, '=', A pošle E1h (á); Shift+'=', Shift+C pošle C3h (Č).
+Tabulky diakritiky zahrnují také slovenské, přehlasované a řecké znaky z ASM.
+Nepodporovaná kombinace ponechá původní znak. Caps nemění velikost diakritiky:
+velikost výsledku zde stejně jako v ASM určuje pouze Shift.
 
-nahoru 0xc1
-dolů   0xc2
-vpravo 0xc3
-vlevo  0xc4
-Home   0x8d
+Rutina OUTPUT v CZ překlápí bit 20h u KAŽDÉHO bajtu C0h-FFh.
+To platí i pro šipky (E1h-E4h), F1-F3 (F0h-F2h) a hexadecimální vstup.
+Elektrická inverze portu P1 se na logické ASCII rozhraní emulátoru nepřenáší.
 
-Uživatelská tlačítka:
-jsou tři bez označení, kódy 0xd0, 0xd1, 0xd2
-namapovat možná na F1-F3.
+Při držení Scroll Lock lze dvěma hex číslicemi 0-9/A-F zadat bajt 00h-FFh.
+Neplatné číslice se ignorují. Uvolnění Scroll Lock zahodí nedokončenou dvojici.
+V CZ pro číslice horní řady použijte Shift nebo numerický blok.
 
+Uvolnění běžné klávesy nic neposílá. Autorepeat emulátoru zůstává 0,5 s / 4 Hz;
+časování PS/2, LED protokol ani elektrické signály MCU se neemulují.

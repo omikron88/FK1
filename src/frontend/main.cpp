@@ -326,57 +326,105 @@ std::optional<std::vector<std::uint8_t>> read_rom(
     return image;
 }
 
-std::optional<std::uint8_t> translate_key(const SDL_KeyboardEvent& event)
+std::optional<std::uint8_t> translate_key(
+    fk1::AtKeyboard& keyboard, const SDL_KeyboardEvent& event)
 {
-    const auto shift = (event.mod & SDL_KMOD_SHIFT) != 0;
-    using SpecialKey = fk1::Keyboard::SpecialKey;
-
-    switch(event.key) {
-    case SDLK_DELETE:
-        return fk1::Keyboard::special_code(SpecialKey::roll, shift);
-    case SDLK_INSERT:
-        return fk1::Keyboard::special_code(SpecialKey::copy, shift);
-    case SDLK_END:
-        return fk1::Keyboard::special_code(SpecialKey::break_key, shift);
-    case SDLK_UP:
-        return fk1::Keyboard::special_code(SpecialKey::up);
-    case SDLK_DOWN:
-        return fk1::Keyboard::special_code(SpecialKey::down);
-    case SDLK_RIGHT:
-        return fk1::Keyboard::special_code(SpecialKey::right);
-    case SDLK_LEFT:
-        return fk1::Keyboard::special_code(SpecialKey::left);
-    case SDLK_HOME:
-        return fk1::Keyboard::special_code(SpecialKey::home);
-    case SDLK_F1:
-        return fk1::Keyboard::special_code(SpecialKey::user_1);
-    case SDLK_F2:
-        return fk1::Keyboard::special_code(SpecialKey::user_2);
-    case SDLK_F3:
-        return fk1::Keyboard::special_code(SpecialKey::user_3);
-    case SDLK_ESCAPE:
-        return fk1::Keyboard::ascii_code(0x1B);
-    case SDLK_BACKSPACE:
-    case SDLK_KP_BACKSPACE:
-        return fk1::Keyboard::ascii_code(0x08);
-    case SDLK_TAB:
-    case SDLK_LEFT_TAB:
-    case SDLK_KP_TAB:
-        return fk1::Keyboard::ascii_code(0x09);
-    case SDLK_RETURN:
-    case SDLK_KP_ENTER:
-    case SDLK_RETURN2:
-        return fk1::Keyboard::ascii_code(0x0D);
-    default:
-        break;
+    std::uint8_t scan = 0;
+    bool extended = false;
+    switch(event.scancode) {
+    case SDL_SCANCODE_A: scan = 0x1C; break;
+    case SDL_SCANCODE_B: scan = 0x32; break;
+    case SDL_SCANCODE_C: scan = 0x21; break;
+    case SDL_SCANCODE_D: scan = 0x23; break;
+    case SDL_SCANCODE_E: scan = 0x24; break;
+    case SDL_SCANCODE_F: scan = 0x2B; break;
+    case SDL_SCANCODE_G: scan = 0x34; break;
+    case SDL_SCANCODE_H: scan = 0x33; break;
+    case SDL_SCANCODE_I: scan = 0x43; break;
+    case SDL_SCANCODE_J: scan = 0x3B; break;
+    case SDL_SCANCODE_K: scan = 0x42; break;
+    case SDL_SCANCODE_L: scan = 0x4B; break;
+    case SDL_SCANCODE_M: scan = 0x3A; break;
+    case SDL_SCANCODE_N: scan = 0x31; break;
+    case SDL_SCANCODE_O: scan = 0x44; break;
+    case SDL_SCANCODE_P: scan = 0x4D; break;
+    case SDL_SCANCODE_Q: scan = 0x15; break;
+    case SDL_SCANCODE_R: scan = 0x2D; break;
+    case SDL_SCANCODE_S: scan = 0x1B; break;
+    case SDL_SCANCODE_T: scan = 0x2C; break;
+    case SDL_SCANCODE_U: scan = 0x3C; break;
+    case SDL_SCANCODE_V: scan = 0x2A; break;
+    case SDL_SCANCODE_W: scan = 0x1D; break;
+    case SDL_SCANCODE_X: scan = 0x22; break;
+    case SDL_SCANCODE_Y: scan = 0x35; break;
+    case SDL_SCANCODE_Z: scan = 0x1A; break;
+    case SDL_SCANCODE_1: scan = 0x16; break;
+    case SDL_SCANCODE_2: scan = 0x1E; break;
+    case SDL_SCANCODE_3: scan = 0x26; break;
+    case SDL_SCANCODE_4: scan = 0x25; break;
+    case SDL_SCANCODE_5: scan = 0x2E; break;
+    case SDL_SCANCODE_6: scan = 0x36; break;
+    case SDL_SCANCODE_7: scan = 0x3D; break;
+    case SDL_SCANCODE_8: scan = 0x3E; break;
+    case SDL_SCANCODE_9: scan = 0x46; break;
+    case SDL_SCANCODE_0: scan = 0x45; break;
+    case SDL_SCANCODE_GRAVE: scan = 0x0E; break;
+    case SDL_SCANCODE_MINUS: scan = 0x4E; break;
+    case SDL_SCANCODE_EQUALS: scan = 0x55; break;
+    case SDL_SCANCODE_LEFTBRACKET: scan = 0x54; break;
+    case SDL_SCANCODE_RIGHTBRACKET: scan = 0x5B; break;
+    case SDL_SCANCODE_BACKSLASH: scan = 0x5D; break;
+    case SDL_SCANCODE_NONUSHASH: scan = 0x5D; break;
+    case SDL_SCANCODE_SEMICOLON: scan = 0x4C; break;
+    case SDL_SCANCODE_APOSTROPHE: scan = 0x52; break;
+    case SDL_SCANCODE_COMMA: scan = 0x41; break;
+    case SDL_SCANCODE_PERIOD: scan = 0x49; break;
+    case SDL_SCANCODE_SLASH: scan = 0x4A; break;
+    case SDL_SCANCODE_SPACE: scan = 0x29; break;
+    case SDL_SCANCODE_TAB: scan = 0x0D; break;
+    case SDL_SCANCODE_RETURN: scan = 0x5A; break;
+    case SDL_SCANCODE_BACKSPACE: scan = 0x66; break;
+    case SDL_SCANCODE_ESCAPE: scan = 0x76; break;
+    case SDL_SCANCODE_F1: scan = 0x05; break;
+    case SDL_SCANCODE_F2: scan = 0x06; break;
+    case SDL_SCANCODE_F3: scan = 0x04; break;
+    case SDL_SCANCODE_F5: scan = 0x03; break;
+    case SDL_SCANCODE_F6: scan = 0x0B; break;
+    case SDL_SCANCODE_F7: scan = 0x83; break;
+    case SDL_SCANCODE_LALT: scan = 0x11; break;
+    case SDL_SCANCODE_RALT: scan = 0x11; break;
+    case SDL_SCANCODE_KP_0: scan = 0x70; break;
+    case SDL_SCANCODE_KP_1: scan = 0x69; break;
+    case SDL_SCANCODE_KP_2: scan = 0x72; break;
+    case SDL_SCANCODE_KP_3: scan = 0x7A; break;
+    case SDL_SCANCODE_KP_4: scan = 0x6B; break;
+    case SDL_SCANCODE_KP_5: scan = 0x73; break;
+    case SDL_SCANCODE_KP_6: scan = 0x74; break;
+    case SDL_SCANCODE_KP_7: scan = 0x6C; break;
+    case SDL_SCANCODE_KP_8: scan = 0x75; break;
+    case SDL_SCANCODE_KP_9: scan = 0x7D; break;
+    case SDL_SCANCODE_KP_PERIOD: scan = 0x71; break;
+    case SDL_SCANCODE_KP_PLUS: scan = 0x79; break;
+    case SDL_SCANCODE_KP_MINUS: scan = 0x7B; break;
+    case SDL_SCANCODE_KP_MULTIPLY: scan = 0x7C; break;
+    case SDL_SCANCODE_END: scan = 0x69; extended = true; break;
+    case SDL_SCANCODE_LEFT: scan = 0x6B; extended = true; break;
+    case SDL_SCANCODE_HOME: scan = 0x6C; extended = true; break;
+    case SDL_SCANCODE_INSERT: scan = 0x70; extended = true; break;
+    case SDL_SCANCODE_DELETE: scan = 0x71; extended = true; break;
+    case SDL_SCANCODE_DOWN: scan = 0x72; extended = true; break;
+    case SDL_SCANCODE_RIGHT: scan = 0x74; extended = true; break;
+    case SDL_SCANCODE_UP: scan = 0x75; extended = true; break;
+    case SDL_SCANCODE_PAGEDOWN: scan = 0x7A; extended = true; break;
+    case SDL_SCANCODE_PAGEUP: scan = 0x7D; extended = true; break;
+    case SDL_SCANCODE_KP_ENTER: scan = 0x5A; extended = true; break;
+    case SDL_SCANCODE_KP_DIVIDE: scan = 0x4A; extended = true; break;
+    default: return std::nullopt;
     }
-
-    const auto layout_modifiers = static_cast<SDL_Keymod>(
-        event.mod & static_cast<SDL_Keymod>(SDL_KMOD_SHIFT | SDL_KMOD_CAPS));
-    const auto character = SDL_GetKeyFromScancode(event.scancode, layout_modifiers, false);
-    const auto control = (event.mod & SDL_KMOD_CTRL) != 0
-        && (event.mod & SDL_KMOD_ALT) == 0;
-    return fk1::Keyboard::ascii_code(static_cast<std::uint32_t>(character), control);
+    return keyboard.translate(scan, extended,
+        (event.mod & SDL_KMOD_SHIFT) != 0, (event.mod & SDL_KMOD_CAPS) != 0,
+        (event.mod & SDL_KMOD_CTRL) != 0, (event.mod & SDL_KMOD_NUM) != 0,
+        (SDL_GetKeyboardState(nullptr)[SDL_SCANCODE_SCROLLLOCK]));
 }
 
 } // namespace
@@ -637,6 +685,7 @@ int main(const int argc, char** argv)
         }
     };
 
+    fk1::AtKeyboard at_keyboard;
     while(running) {
         SDL_Event event{};
         while(SDL_PollEvent(&event)) {
@@ -649,13 +698,13 @@ int main(const int argc, char** argv)
                     continue;
                 }
                 const auto captured = ImGui::GetIO().WantCaptureKeyboard;
-                if(!captured && event.key.key == SDLK_F5) {
+                if(!captured && event.key.scancode == SDL_SCANCODE_F4) {
                     paused = !paused;
                     ui_state.status = paused ? "Emulation paused" : "Emulation running";
                     continue;
                 }
                 if(!captured) {
-                    const auto code = translate_key(event.key);
+                    const auto code = translate_key(at_keyboard, event.key);
                     if(code) {
                         machine.keyboard_key_down(
                             static_cast<std::uint32_t>(event.key.scancode),
@@ -663,6 +712,7 @@ int main(const int argc, char** argv)
                     }
                 }
             } else if(event.type == SDL_EVENT_KEY_UP) {
+                if(event.key.scancode == SDL_SCANCODE_SCROLLLOCK) at_keyboard.release_scroll();
                 machine.keyboard_key_up(static_cast<std::uint32_t>(event.key.scancode));
             } else if(event.type == SDL_EVENT_MOUSE_MOTION && mouse_captured) {
                 machine.mouse_motion(
@@ -732,6 +782,7 @@ int main(const int argc, char** argv)
         ImGui_ImplSDLRenderer3_NewFrame();
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
+        ui_state.keyboard_czech = at_keyboard.czech();
         fk1::frontend::draw_ui(
             window,
             texture,

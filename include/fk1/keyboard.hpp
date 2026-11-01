@@ -5,6 +5,25 @@
 
 namespace fk1 {
 
+// PC AT set-2 decoder matching the logical bytes of KEYB_FIN.ASM.
+// Electrical inversion on P1 is handled by the real adapter, not by this decoder.
+class AtKeyboard final {
+public:
+    [[nodiscard]] std::optional<std::uint8_t> translate(
+        std::uint8_t scan, bool extended = false, bool shift = false,
+        bool caps = false, bool control = false, bool num = false,
+        bool scroll = false) noexcept;
+    void reset() noexcept;
+    void release_scroll() noexcept { hex_pending_ = false; }
+    [[nodiscard]] bool czech() const noexcept { return czech_; }
+private:
+    bool czech_{false};
+    bool acute_{false};
+    bool caron_{false};
+    bool hex_pending_{false};
+    std::uint8_t hex_high_{0};
+};
+
 class Keyboard final {
 public:
     enum class SpecialKey {
