@@ -359,7 +359,7 @@ void draw_menu_bar(
         if(ImGui::MenuItem("Reset")) {
             reset_machine(machine, paused, state);
         }
-        if(ImGui::MenuItem(paused ? "Resume" : "Pause", "F5")) {
+        if(ImGui::MenuItem(paused ? "Resume" : "Pause", "F4")) {
             toggle_pause(paused, state);
         }
         if(ImGui::MenuItem(
@@ -515,6 +515,8 @@ void draw_status_bar(
     ImGui::Dummy({16.0F, 1.0F});
     ImGui::SameLine();
     ImGui::TextUnformatted(paused ? "PAUSED" : "RUNNING");
+    ImGui::SameLine();
+    ImGui::Text("| KBD: %s", state.keyboard_czech ? "CZ" : "US");
     ImGui::SameLine();
     ImGui::TextDisabled("|");
     ImGui::SameLine();

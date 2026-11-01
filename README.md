@@ -275,9 +275,18 @@ pozastaví další rámce bez neomezeného růstu paměti.
 Pro propojení na jednom počítači je nejbezpečnější `127.0.0.1`. Adresa
 `0.0.0.0` zpřístupní listener i z okolní sítě, takže ji používejte jen záměrně.
 
-Okno emulátoru se ukončuje jeho zavřením nebo přes **File > Exit**. Klávesa F5
+Okno emulátoru se ukončuje jeho zavřením nebo přes **File > Exit**. Klávesa F4
 pozastaví nebo obnoví emulaci a F12 zachytí či uvolní myš. Escape se nadále
 předává emulovanému stroji jako kód `0x1B`.
+
+## Klávesnice PC AT / KOI-8
+
+Frontend používá fyzické pozice kláves a převodní tabulky `KEYB_FIN.ASM`.
+Alt přepíná US/CZ, česká diakritika používá mrtvou klávesu na US pozici `=`
+(čárka) nebo Shift+`=` (háček). ROL/COPY/BREAK jsou na F5/F6/F7,
+Backspace posílá `08h`. Při držení Scroll Lock lze zadat bajt dvěma hex číslicemi.
+Pauza emulátoru je na F4. Podrobnosti a zvláštnosti původního firmwaru včetně
+povoleného přepínání češtiny jsou v [doc/keyboard.txt](doc/keyboard.txt).
 
 ## Sestavení pouze jádra
 

@@ -262,6 +262,53 @@ void test_floppy_byte_stream_wrap()
            "timed FM bytes must be emitted once in [phase, phase+ticks), including across Index");
 }
 
+void test_at_keyboard_converter()
+{
+    fk1::AtKeyboard keyboard;
+    auto key = [&](std::uint8_t scan, bool shift = false, bool caps = false,
+                   bool ctrl = false, bool scroll = false) {
+        return keyboard.translate(scan, false, shift, caps, ctrl, false, scroll);
+    };
+    expect(key(0x1C) == 'a' && key(0x1C, true) == 'A', "AT US letter tables");
+    expect(key(0x16, false, true) == '!' && key(0x16, true, true) == '1',
+           "firmware Caps XOR Shift selects the whole table, including digits");
+    expect(key(0x66) == 0x08 && keyboard.translate(0x71, true) == 0x7F,
+           "AT Backspace and Delete are distinct");
+    expect(key(3) == 0x80 && key(3, true) == 0x81
+               && key(0x0B) == 0x82 && key(0x83, true) == 0x85,
+           "F5-F7 implement ROL/COPY/BREAK");
+    expect(keyboard.translate(0x6C, true) == 0x1E
+               && keyboard.translate(0x6C, true, true) == 0x15
+               && keyboard.translate(0x70, true) == 0x16
+               && !keyboard.translate(0x70, true, true)
+               && !keyboard.translate(0x75, true, false, false, false, true),
+           "extended navigation follows firmware Shift and NumLock rules");
+    expect(key(0x1C, false, false, true) == 1
+               && key(0x1E, true, false, true) == 0
+               && !key(0x16, false, false, true), "Ctrl includes NUL and rejects digits");
+    expect(!key(0x11) && keyboard.czech(), "Alt enables Czech");
+    expect(key(0x1E) == 0xE5 && key(0x1E, true) == '2', "Czech number row and OUTPUT case swap");
+    expect(key(5) == 0xF0 && keyboard.translate(0x75, true) == 0xE1,
+           "firmware OUTPUT swaps high function and navigation bytes in Czech too");
+    expect(!key(0x55) && key(0x1C) == 0xE1 && key(0x1C) == 'a', "acute is a one-shot dead key");
+    expect(!key(0x55, true) && key(0x21, true) == 0xC3, "shifted caron produces uppercase C caron");
+    expect(!key(0x55) && key(0x54, true) == '/', "unsupported accent preserves punctuation");
+    expect(!key(0x55) && key(0x1C, false, false, true) == 0xE1, "accent takes precedence over Ctrl");
+    expect(!key(0x11) && !keyboard.czech(), "Alt returns to US");
+    expect(!key(0x16, false, false, false, true)
+               && !key(0x35, false, false, false, true)
+               && key(0x21, false, false, false, true) == 0x1C,
+           "Scroll hex entry ignores invalid digits and emits one byte per pair");
+    expect(!key(0x45, false, false, false, true)
+               && key(0x45, false, false, false, true) == 0, "hexadecimal NUL is emitted");
+    expect(!key(0x16, false, false, false, true), "partial hex entry");
+    keyboard.release_scroll();
+    expect(!key(0x21, false, false, false, true)
+               && key(0x1C, false, false, false, true) == 0xCA, "Scroll release discards partial hex entry");
+    keyboard.reset();
+    expect(!keyboard.czech() && key(0x1C) == 'a', "reset clears converter state");
+}
+
 void test_keyboard_codes_and_repeat_timing()
 {
     using Keyboard = fk1::Keyboard;
@@ -570,6 +617,7 @@ int main()
     test_timed_fm_track_and_drive_rotation();
     test_8sd_ibm_3740_import();
     test_floppy_byte_stream_wrap();
+    test_at_keyboard_converter();
     test_keyboard_codes_and_repeat_timing();
     test_ppi_mode_zero_and_bsr();
     test_ppi_mode_one_handshake();

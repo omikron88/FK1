@@ -26,6 +26,7 @@ struct UiState {
     bool disk_dialog_was_running{false};
     bool screen_hovered{false};
     bool serial_enabled{false};
+    bool keyboard_czech{false};
     std::array<bool, 2> open_writable{};
     std::array<std::string, 2> disk_dialog_paths{};
     std::vector<std::filesystem::path> protected_disk_paths;
